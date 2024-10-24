@@ -27,6 +27,7 @@ all: \
   $(tmp_dir)/polygons.tbl.csv \
   $(tmp_dir)/raw_meta.tbl.csv \
   $(tmp_dir)/refs.tbl.csv \
+  $(tmp_dir)/runoregi_pages.tbl.tsv \
   $(tmp_dir)/verse_poem.tbl.csv \
   $(tmp_dir)/verses.tbl.csv \
   $(tmp_dir)/verses_cl.tbl.csv \
@@ -177,6 +178,10 @@ $(tmp_dir)/p_col.tbl.csv: \
 	$(trk) -O -i $< -o $@ \
 	       -d poem_id:p_id:$(tmp_dir)/poems.tbl.csv \
 	          collector_id:col_id:$(tmp_dir)/collectors.idmap.csv
+
+$(tmp_dir)/runoregi_pages.tbl.tsv: \
+  $(DATA_DIR)/runoregi_pages.tsv
+	cp $< $@
 
 $(tmp_dir)/p_dupl.tbl.csv: $(DATA_DIR)/poem_duplicates.csv
 	$(trk) -O -i $(DATA_DIR)/poem_duplicates.csv -o $@ \
