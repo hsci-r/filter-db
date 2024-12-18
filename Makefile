@@ -12,6 +12,7 @@ mysql = mysql -D $(DB_NAME)
 
 all: \
   $(tmp_dir) \
+  $(tmp_dir)/poems.tbl.csv \
   $(tmp_dir)/collectors.tbl.csv \
   $(tmp_dir)/maps.tbl.csv \
   $(tmp_dir)/map_pol.tbl.csv \
@@ -20,7 +21,6 @@ all: \
   $(tmp_dir)/p_col.tbl.csv \
   $(tmp_dir)/p_pl.tbl.csv \
   $(tmp_dir)/p_year.tbl.csv \
-  $(tmp_dir)/poems.tbl.csv \
   $(tmp_dir)/p_typ.tbl.csv \
   $(tmp_dir)/p_sim.tbl.csv \
   $(tmp_dir)/p_clust.tbl.csv \
@@ -133,27 +133,28 @@ $(tmp_dir)/types.tbl.csv: $(DATA_DIR)/types.csv
 	rm -f $(tmp_dir)/types.tmp*
 
 $(tmp_dir)/verses.tbl.csv: $(tmp_dir)/verse_poem.tbl.csv
-$(tmp_dir)/poems.tbl.csv: $(tmp_dir)/verse_poem.tbl.csv
+
+$(tmp_dir)/poems.tbl.csv: $(DATA_DIR)/poems.csv
+	mkdir -p $(tmp_dir)
+	$(trk) -a -i $< -o $@ -d poem_id:p_id:$(tmp_dir)/poems.idmap.csv
 
 $(tmp_dir)/verse_poem.tbl.csv: $(DATA_DIR)/verses.csv
 	mkdir -p $(tmp_dir)
 	$(trk) -i $< -o $@ \
 	       -d verse_type,text:v_id:$(tmp_dir)/verses.tbl.csv \
-	          poem_id:p_id:$(tmp_dir)/poems.tbl.csv
+	          poem_id:p_id:$(tmp_dir)/poems.idmap.csv
 
 $(tmp_dir)/verses_cl.tbl.csv: \
   $(DATA_DIR)/verses_cl.csv \
-  $(tmp_dir)/poems.tbl.csv \
   $(tmp_dir)/verse_poem.tbl.csv
-	$(trk) -i $< -d poem_id:p_id:$(tmp_dir)/poems.tbl.csv \
+	$(trk) -i $< -d poem_id:p_id:$(tmp_dir)/poems.idmap.csv \
 	| $(python) scripts/map_columns.py -u -f p_id,pos -t v_id \
         $(tmp_dir)/verse_poem.tbl.csv > $@
 
 $(tmp_dir)/word_occ.tbl.csv: \
   $(DATA_DIR)/word_occ.csv \
-  $(tmp_dir)/poems.tbl.csv \
   $(tmp_dir)/verse_poem.tbl.csv
-	$(trk) -i $< -d poem_id:p_id:$(tmp_dir)/poems.tbl.csv \
+	$(trk) -i $< -d poem_id:p_id:$(tmp_dir)/poems.idmap.csv \
 	                text:w_id:$(tmp_dir)/words.tbl.csv \
 	| $(python) scripts/map_columns.py -u -f p_id,pos -t v_id \
 	    $(tmp_dir)/verse_poem.tbl.csv > $@
@@ -167,16 +168,15 @@ $(tmp_dir)/place_stats.tbl.csv:
 $(tmp_dir)/raw_meta.tbl.csv: \
   $(DATA_DIR)/raw_meta.csv \
   $(tmp_dir)/poems.tbl.csv
-	$(trk) -i $< -o $@ -d poem_id:p_id:$(tmp_dir)/poems.tbl.csv
+	$(trk) -i $< -o $@ -d poem_id:p_id:$(tmp_dir)/poems.idmap.csv
 
 $(tmp_dir)/p_col.tbl.csv: \
   $(DATA_DIR)/poem_collector.csv \
-  $(tmp_dir)/collectors.tbl.csv \
-  $(tmp_dir)/poems.tbl.csv
+  $(tmp_dir)/collectors.tbl.csv
 	csvcut -c col_id,collector_id $(tmp_dir)/collectors.tbl.csv \
 	  > $(tmp_dir)/collectors.idmap.csv
 	$(trk) -O -i $< -o $@ \
-	       -d poem_id:p_id:$(tmp_dir)/poems.tbl.csv \
+	       -d poem_id:p_id:$(tmp_dir)/poems.idmap.csv \
 	          collector_id:col_id:$(tmp_dir)/collectors.idmap.csv
 
 $(tmp_dir)/runoregi_pages.tbl.tsv: \
@@ -185,43 +185,39 @@ $(tmp_dir)/runoregi_pages.tbl.tsv: \
 
 $(tmp_dir)/p_dupl.tbl.csv: $(DATA_DIR)/poem_duplicates.csv
 	$(trk) -O -i $(DATA_DIR)/poem_duplicates.csv -o $@ \
-	       -d poem_id:p_id:$(tmp_dir)/poems.tbl.csv \
-	          master_poem_id:master_p_id:$(tmp_dir)/poems.tbl.csv:master_p_id,master_poem_id
+	       -d poem_id:p_id:$(tmp_dir)/poems.idmap.csv \
+	          master_poem_id:master_p_id:$(tmp_dir)/poems.idmap.csv:master_p_id,master_poem_id
 
 $(tmp_dir)/p_pl.tbl.csv: \
   $(DATA_DIR)/poem_place.csv \
-  $(tmp_dir)/places.tbl.csv \
-  $(tmp_dir)/poems.tbl.csv
+  $(tmp_dir)/places.tbl.csv
 	$(trk) -O -i $< -o $@ \
-	       -d poem_id:p_id:$(tmp_dir)/poems.tbl.csv \
+	       -d poem_id:p_id:$(tmp_dir)/poems.idmap.csv \
 	          place_id:pl_id:$(tmp_dir)/places.idmap.csv
 
 $(tmp_dir)/p_year.tbl.csv: \
-  $(DATA_DIR)/poem_year.csv \
-  $(tmp_dir)/poems.tbl.csv
-	$(trk) -O -i $< -o $@ -d poem_id:p_id:$(tmp_dir)/poems.tbl.csv
+  $(DATA_DIR)/poem_year.csv
+	$(trk) -O -i $< -o $@ -d poem_id:p_id:$(tmp_dir)/poems.idmap.csv
 
 $(tmp_dir)/p_typ.tbl.csv: \
   $(DATA_DIR)/poem_types.csv \
-  $(tmp_dir)/types.tbl.csv \
-  $(tmp_dir)/poems.tbl.csv
+  $(tmp_dir)/types.tbl.csv
 	$(trk) -O -i $< -o $@ \
-	       -d poem_id:p_id:$(tmp_dir)/poems.tbl.csv \
+	       -d poem_id:p_id:$(tmp_dir)/poems.idmap.csv \
 	          type_id:t_id:$(tmp_dir)/types.idmap.csv
 
 $(tmp_dir)/refs.tbl.csv: \
-  $(DATA_DIR)/refs.csv \
-  $(tmp_dir)/poems.tbl.csv
-	$(trk) -i $< -o $@ -d poem_id:p_id:$(tmp_dir)/poems.tbl.csv
+  $(DATA_DIR)/refs.csv
+	$(trk) -i $< -o $@ -d poem_id:p_id:$(tmp_dir)/poems.idmap.csv
 
 $(tmp_dir)/p_sim.tbl.csv: $(DATA_DIR)/p_sim.csv
 	$(trk) -O -i $< -o $@ \
-	  -d poem_id_1:p1_id:$(tmp_dir)/poems.tbl.csv:p1_id,poem_id_1 \
-	     poem_id_2:p2_id:$(tmp_dir)/poems.tbl.csv:p2_id,poem_id_2
+	  -d poem_id_1:p1_id:$(tmp_dir)/poems.idmap.csv:p1_id,poem_id_1 \
+	     poem_id_2:p2_id:$(tmp_dir)/poems.idmap.csv:p2_id,poem_id_2
 
 $(tmp_dir)/p_clust.tbl.csv: $(DATA_DIR)/p_clust.tsv
 	csvformat -t $< | sed '1ipoem_id,clust_id' \
-	| $(trk) -i - -o $@ -d poem_id:p_id:data/poems.tbl.csv
+	| $(trk) -i - -o $@ -d poem_id:p_id:data/poems.idmap.csv
 
 $(tmp_dir)/v_clusterings.tbl.csv: $(DATA_DIR)/v_clusterings.csv
 	cp $< $@
