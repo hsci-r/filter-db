@@ -19,6 +19,7 @@ all: \
   $(tmp_dir)/places.tbl.csv \
   $(tmp_dir)/pol_pl.tbl.csv \
   $(tmp_dir)/p_col.tbl.csv \
+  $(tmp_dir)/p_dupl.tbl.csv \
   $(tmp_dir)/p_pl.tbl.csv \
   $(tmp_dir)/p_year.tbl.csv \
   $(tmp_dir)/p_typ.tbl.csv \
@@ -162,6 +163,8 @@ $(tmp_dir)/word_occ.tbl.csv: \
 $(tmp_dir)/words.tbl.csv: $(tmp_dir)/word_occ.tbl.csv
 
 # Files do not exist -- dummy targets for computing the tables in SQL.
+$(tmp_dir)/p_clust_freq.tbl.csv:
+$(tmp_dir)/v_clust_freq.tbl.csv:
 $(tmp_dir)/word_freq.tbl.csv:
 $(tmp_dir)/place_stats.tbl.csv:
 
@@ -256,6 +259,8 @@ dbexport: \
   verses_cl.tbl \
   words.tbl \
   word_occ.tbl \
+  p_clust_freq.tbl \
+  v_clust_freq.tbl \
   word_freq.tbl \
   place_stats.tbl
 
