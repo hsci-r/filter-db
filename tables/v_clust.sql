@@ -10,7 +10,8 @@ CREATE TABLE v_clust(
   confidence FLOAT DEFAULT NULL,
   PRIMARY KEY(clustering_id, v_id),
   INDEX(clustering_id, clust_id)
-) CHARACTER SET 'utf8';
+) ENGINE=Aria DEFAULT CHARSET=utf8mb4 PAGE_CHECKSUM=0 TRANSACTIONAL=0;
+
 
 LOAD DATA LOCAL INFILE 'data/v_clust.tbl.csv' INTO TABLE v_clust
   FIELDS TERMINATED BY ',' IGNORE 1 ROWS;
